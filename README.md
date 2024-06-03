@@ -1,2 +1,3 @@
-# oss_personal_project
-oss_personal_project
+# reference
+https://github.com/pygame/pygame "pygame"
+https://github.com/attreyabhatt/Space-Invaders-Pygame 
