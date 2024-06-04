@@ -61,8 +61,10 @@ pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
 # 게임 시작 및 종료 문구, 최고 점수 텍스트 생성 
 start_text = small_font.render("press spacekey to start game", True, BLACK)
 start_text_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
-end_text = small_font.render("game over (press spacekey to retry)", True, BLACK)
+end_text = small_font.render("game over (press spacekey to restart)", True, BLACK)
 end_text_rect = end_text.get_rect(center=(screen_width // 2, screen_height // 2))
+quit_text = small_font.render("press q to quit game", True, BLACK)
+quit_text_rect = quit_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
 
 # 점수 설정
 
@@ -71,19 +73,18 @@ def print_score():
     screen.blit(score_text, (5, 5))
 
 def print_max_score():
-    max_score_text = small_font.render(f"max score: {max_point}", True, BLACK)
-    screen.blit(max_score_text, (5,40))
+    max_score_text = small_font.render(f"high score: {max_point}", True, BLACK)
+    screen.blit(max_score_text, (screen_width-180,5))
 
 game_started = False
 first_game = True
-
 point = 0
 max_point = 0
 ball_hit_count = 0
 
 # 게임 초기화
 def reset_game():
-    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count
     bricks = []
     for column_index in range(COLUMN):
         for row_index in range(ROW):
@@ -123,6 +124,9 @@ while True:
                 reset_game()
                 game_started = True
                 first_game = False
+            elif not game_started and event.key == pygame.K_q:
+                pygame.quit()
+
             
                 
     if game_started:  # 게임이 시작된 상태라면
@@ -194,8 +198,10 @@ while True:
     if not game_started:
         if first_game:
             screen.blit(start_text, start_text_rect)
+            screen.blit(quit_text, quit_text_rect)
         else:
             screen.blit(end_text, end_text_rect)
+            screen.blit(quit_text, quit_text_rect)
 
     # 화면 업데이트
     pygame.display.flip()
