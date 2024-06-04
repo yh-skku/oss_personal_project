@@ -48,7 +48,7 @@ for brick in bricks:
     pygame.draw.rect(screen, RED, brick)
 
 # 바 생성
-bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16, 80, 16)
+bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
 pygame.draw.rect(screen, BLUE,bar)
 
 # 공 생성
@@ -56,14 +56,14 @@ ball_radius = 8
 ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
 ball_dx = 5
 ball_dy = -5
-pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
+pygame.draw.circle(screen, BLACK, ball.center, ball_radius)
 
 # 게임 시작 문구 생성
 start_text = small_font.render("press spacekey to start game", True, BLACK)
 start_text_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
 
 game_started = False
-
+miss=0
 # 게임 시작
 while True:
     for event in pygame.event.get():
@@ -84,7 +84,26 @@ while True:
         # 공 이동
         ball.x += ball_dx
         ball.y += ball_dy
-        
+        ball.left += ball_dx
+        ball.top  += ball_dy
+
+    if ball.left <= 0: # 공이 왼쪽 벽에 닿았을 경우
+        ball.left = 0
+        ball_dx = -ball_dx
+    elif ball.left >= screen_width - ball.width: #공이 오른쪽 벽에 닿았을 경우
+        ball.left = screen_width - ball.width
+        ball_dx = -ball_dx
+    if ball.top < 0: # 공이 천장에 닿았을 경우
+        ball.top = 0
+        ball_dy = -ball_dy
+    elif ball.top >= screen_height: # 공이 바닥에 닿았을 경우
+        miss+=1
+        game_started = False
+        ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
+        bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
+        ball_dy = -5
+
+
     # 화면 지우기
     screen.blit(background_image,(0,0))
 
@@ -93,7 +112,7 @@ while True:
         pygame.draw.rect(screen, GREEN, brick)
     
     # 공 그리기
-    pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
+    pygame.draw.circle(screen, BLACK, ball.center, ball_radius)
 
     # 바 그리기
     pygame.draw.rect(screen, BLUE, bar)
