@@ -58,12 +58,38 @@ ball_dx = 5
 ball_dy = -5
 pygame.draw.circle(screen, BLACK, ball.center, ball_radius)
 
-# 게임 시작 문구 생성
+# 게임 시작 및 종료 문구 생성 
 start_text = small_font.render("press spacekey to start game", True, BLACK)
 start_text_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
+end_text = small_font.render("game over (press spacekey to retry)", True, BLACK)
+end_text_rect = end_text.get_rect(center=(screen_width // 2, screen_height // 2))
 
 game_started = False
-miss=0
+game_over = False
+
+point = 0
+target = 20
+
+# 게임 초기화
+def reset_game():
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, game_over, life, point
+    bricks = []
+    for column_index in range(COLUMN):
+        for row_index in range(ROW):
+            brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
+            brick_y = row_index * (brick_height + brick_spacing) + 35
+            brick = pygame.Rect(brick_x, brick_y, brick_width, brick_height)
+            bricks.append(brick)
+    bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
+    ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
+    ball_dx = 5
+    ball_dy = -5
+    game_started = False
+    game_over = False
+    point = 0
+
+reset_game()
+
 # 게임 시작
 while True:
     for event in pygame.event.get():
@@ -71,6 +97,8 @@ while True:
             pygame.quit()
         elif event.type == pygame.KEYDOWN:
             if not game_started and event.key == pygame.K_SPACE:
+                if game_over:
+                    reset_game()
                 game_started = True
                 
     if game_started:  # 게임이 시작된 상태라면
@@ -87,22 +115,38 @@ while True:
         ball.left += ball_dx
         ball.top  += ball_dy
 
-    if ball.left <= 0: # 공이 왼쪽 벽에 닿았을 경우
-        ball.left = 0
-        ball_dx = -ball_dx
-    elif ball.left >= screen_width - ball.width: #공이 오른쪽 벽에 닿았을 경우
-        ball.left = screen_width - ball.width
-        ball_dx = -ball_dx
-    if ball.top < 0: # 공이 천장에 닿았을 경우
-        ball.top = 0
-        ball_dy = -ball_dy
-    elif ball.top >= screen_height: # 공이 바닥에 닿았을 경우
-        miss+=1
-        game_started = False
-        ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
-        bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
-        ball_dy = -5
+        if ball.left <= 0: # 공이 왼쪽 벽에 닿았을 경우
+            ball.left = 0
+            ball_dx = -ball_dx
+        elif ball.left >= screen_width - ball.width: #공이 오른쪽 벽에 닿았을 경우
+            ball.left = screen_width - ball.width
+            ball_dx = -ball_dx
+        if ball.top < 0: # 공이 천장에 닿았을 경우
+            ball.top = 0
+            ball_dy = -ball_dy
+        elif ball.top >= screen_height: # 공이 바닥에 닿았을 경우
+            game_started = False
+            ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
+            bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
+            ball_dy = -5
 
+        # 공이 벽돌에 닿았을 경우
+        for brick in bricks:
+            if ball.colliderect(brick):
+                bricks.remove(brick)
+                ball_dy = -ball_dy
+                point+=1
+                target-=1
+                break
+    
+        # 공이 바에 닿았을 경우
+        if ball.colliderect(bar):
+            ball_dy = -ball_dy
+        
+        # 모든 벽돌을 제거했을 경우
+        if len(bricks) == 0:
+            game_over = True
+            game_started = False
 
     # 화면 지우기
     screen.blit(background_image,(0,0))
@@ -116,9 +160,13 @@ while True:
 
     # 바 그리기
     pygame.draw.rect(screen, BLUE, bar)
-    # 게임 시작 문구 그리기
+    
+    #게임 시작 또는 종료 문구 출력
     if not game_started:
-        screen.blit(start_text, start_text_rect)
+        if game_over:
+            screen.blit(end_text, end_text_rect)
+        else:
+            screen.blit(start_text, start_text_rect)
 
     # 화면 업데이트
     pygame.display.flip()
