@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -8,7 +9,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
+YELLOW = (200, 200, 0)
 GRAY = (128, 128, 128)
 large_font = pygame.font.SysFont(None, 72)
 small_font = pygame.font.SysFont(None, 36)
@@ -17,6 +18,16 @@ small_font = pygame.font.SysFont(None, 36)
 icon_image = pygame.image.load("icon.jpg")
 background_image = pygame.image.load("background.png")
 
+# 벽돌 클래스 생성
+class Brick(pygame.Rect):
+    #벽돌 생성 및 초기화
+    def __init__(self, x, y, width, height, block_value):
+        super().__init__(x, y, width, height)
+        self.block_value = block_value
+    # value 벽돌에 나타내기
+    def draw_value(self, screen):
+        value_text = small_font.render(str(self.block_value), True, BLACK)
+        screen.blit(value_text, (self.x + self.width // 2 - value_text.get_width() // 2, self.y + self.height // 2 - value_text.get_height() // 2))
 
 # 화면 설정
 screen_width = 1000
@@ -31,6 +42,7 @@ screen.blit(background_image,(0,0))
 clock= pygame.time.Clock()
 
 # 벽돌 생성
+
 bricks = []
 COLUMN = 10
 ROW = 2
@@ -38,14 +50,16 @@ brick_width = 70
 brick_height = 30
 brick_spacing = 20
 
-for column_index in range(COLUMN):
-    for row_index in range(ROW):
-        brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
-        brick_y = row_index * (brick_height + brick_spacing) + 35
-        brick = pygame.Rect(brick_x, brick_y, brick_width, brick_height)
-        bricks.append(brick)
-for brick in bricks:
-    pygame.draw.rect(screen, RED, brick)
+def make_brick():
+    global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
+    for column_index in range(COLUMN):
+        for row_index in range(ROW):
+            brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
+            brick_y = row_index * (brick_height + brick_spacing) + 35
+            block_value = random.randint(1, 5)
+            brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
+            bricks.append(brick)
+
 
 # 바 생성
 bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
@@ -85,13 +99,8 @@ ball_hit_count = 0
 # 게임 초기화
 def reset_game():
     global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count
-    bricks = []
-    for column_index in range(COLUMN):
-        for row_index in range(ROW):
-            brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
-            brick_y = row_index * (brick_height + brick_spacing) + 35
-            brick = pygame.Rect(brick_x, brick_y, brick_width, brick_height)
-            bricks.append(brick)
+    bricks.clear()
+    make_brick()
     bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
     ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
     ball_dx = 5
@@ -103,6 +112,7 @@ reset_game()
 
 # 새로운 벽돌을 생성하면서 벽돌을 한 칸 아래로 이동
 def move_bricks_down():
+    global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
     for brick in bricks:
         brick.y += brick_height + brick_spacing
 
@@ -110,8 +120,10 @@ def move_bricks_down():
     for column_index in range(COLUMN):
         brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
         brick_y = 35
-        new_brick = pygame.Rect(brick_x, brick_y, brick_width, brick_height)
-        bricks.append(new_brick)
+        block_value = random.randint(1, 5)
+        brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
+        bricks.append(brick)
+        
 
 
 # 게임 시작
@@ -160,9 +172,11 @@ while True:
         # 공이 벽돌에 닿았을 경우
         for brick in bricks:
             if ball.colliderect(brick):
-                bricks.remove(brick)
+                brick.block_value -= 1
+                if brick.block_value <= 0:
+                    bricks.remove(brick)
+                    point+=1
                 ball_dy = -ball_dy
-                point+=1
                 break
     
         # 공이 바에 닿았을 경우
@@ -183,6 +197,7 @@ while True:
     # 벽돌 그리기
     for brick in bricks:
         pygame.draw.rect(screen, GREEN, brick)
+        brick.draw_value(screen)
     
     # 공 그리기
     pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
