@@ -58,7 +58,7 @@ ball_dx = 5
 ball_dy = -5
 pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
 
-# 게임 시작 및 종료 문구 생성 
+# 게임 시작 및 종료 문구, 최고 점수 텍스트 생성 
 start_text = small_font.render("press spacekey to start game", True, BLACK)
 start_text_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
 end_text = small_font.render("game over (press spacekey to retry)", True, BLACK)
@@ -70,8 +70,12 @@ def print_score():
     score_text = small_font.render(f"Score: {point}", True, BLACK)
     screen.blit(score_text, (5, 5))
 
+def print_max_score():
+    max_score_text = small_font.render(f"max score: {max_point}", True, BLACK)
+    screen.blit(max_score_text, (5,40))
+
 game_started = False
-game_over = False
+first_game = True
 
 point = 0
 max_point = 0
@@ -79,7 +83,7 @@ ball_hit_count = 0
 
 # 게임 초기화
 def reset_game():
-    global bricks, bar, ball, ball_dx, ball_dy, game_started, game_over, life, point
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point
     bricks = []
     for column_index in range(COLUMN):
         for row_index in range(ROW):
@@ -91,8 +95,6 @@ def reset_game():
     ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
     ball_dx = 5
     ball_dy = -5
-    game_started = False
-    game_over = False
     point = 0
     ball_hit_count = 0 
 
@@ -118,9 +120,10 @@ while True:
             pygame.quit()
         elif event.type == pygame.KEYDOWN:
             if not game_started and event.key == pygame.K_SPACE:
-                if game_over:
-                    reset_game()
+                reset_game()
                 game_started = True
+                first_game = False
+            
                 
     if game_started:  # 게임이 시작된 상태라면
         # 바 이동
@@ -147,9 +150,8 @@ while True:
             ball_dy = -ball_dy
         elif ball.top >= screen_height: # 공이 바닥에 닿았을 경우
             game_started = False
-            ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
-            bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
-            ball_dy = -5
+            if max_point < point:
+                max_point = point
 
         # 공이 벽돌에 닿았을 경우
         for brick in bricks:
@@ -169,7 +171,6 @@ while True:
         
         # 모든 벽돌을 제거했을 경우
         if len(bricks) == 0:
-            game_over = True
             game_started = False
 
     # 화면 지우기
@@ -187,13 +188,14 @@ while True:
     
     # 점수 출력
     print_score()
+    print_max_score()
     
     #게임 시작 또는 종료 문구 출력
     if not game_started:
-        if game_over:
-            screen.blit(end_text, end_text_rect)
-        else:
+        if first_game:
             screen.blit(start_text, start_text_rect)
+        else:
+            screen.blit(end_text, end_text_rect)
 
     # 화면 업데이트
     pygame.display.flip()
