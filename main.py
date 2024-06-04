@@ -56,13 +56,19 @@ ball_radius = 8
 ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
 ball_dx = 5
 ball_dy = -5
-pygame.draw.circle(screen, BLACK, ball.center, ball_radius)
+pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
 
 # 게임 시작 및 종료 문구 생성 
 start_text = small_font.render("press spacekey to start game", True, BLACK)
 start_text_rect = start_text.get_rect(center=(screen_width // 2, screen_height // 2))
 end_text = small_font.render("game over (press spacekey to retry)", True, BLACK)
 end_text_rect = end_text.get_rect(center=(screen_width // 2, screen_height // 2))
+
+# 점수 설정
+
+def print_score():
+    score_text = small_font.render(f"Score: {point}", True, BLACK)
+    screen.blit(score_text, (5, 5))
 
 game_started = False
 game_over = False
@@ -156,10 +162,13 @@ while True:
         pygame.draw.rect(screen, GREEN, brick)
     
     # 공 그리기
-    pygame.draw.circle(screen, BLACK, ball.center, ball_radius)
+    pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
 
     # 바 그리기
     pygame.draw.rect(screen, BLUE, bar)
+    
+    # 점수 출력
+    print_score()
     
     #게임 시작 또는 종료 문구 출력
     if not game_started:
