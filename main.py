@@ -74,7 +74,8 @@ game_started = False
 game_over = False
 
 point = 0
-target = 20
+max_point = 0
+ball_hit_count = 0
 
 # 게임 초기화
 def reset_game():
@@ -93,8 +94,22 @@ def reset_game():
     game_started = False
     game_over = False
     point = 0
+    ball_hit_count = 0 
 
 reset_game()
+
+# 새로운 벽돌을 생성하면서 벽돌을 한 칸 아래로 이동
+def move_bricks_down():
+    for brick in bricks:
+        brick.y += brick_height + brick_spacing
+
+    # 맨 위에 새로운 벽돌 추가
+    for column_index in range(COLUMN):
+        brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
+        brick_y = 35
+        new_brick = pygame.Rect(brick_x, brick_y, brick_width, brick_height)
+        bricks.append(new_brick)
+
 
 # 게임 시작
 while True:
@@ -111,9 +126,9 @@ while True:
         # 바 이동
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and bar.left > 0:
-            bar.move_ip(-5, 0)
+            bar.move_ip(-10, 0)
         if keys[pygame.K_RIGHT] and bar.right < screen_width:
-            bar.move_ip(5, 0)
+            bar.move_ip(10, 0)
 
         # 공 이동
         ball.x += ball_dx
@@ -142,12 +157,15 @@ while True:
                 bricks.remove(brick)
                 ball_dy = -ball_dy
                 point+=1
-                target-=1
                 break
     
         # 공이 바에 닿았을 경우
         if ball.colliderect(bar):
             ball_dy = -ball_dy
+            ball_hit_count += 1
+            if ball_hit_count == 5:
+                move_bricks_down() 
+                ball_hit_count = 0
         
         # 모든 벽돌을 제거했을 경우
         if len(bricks) == 0:
