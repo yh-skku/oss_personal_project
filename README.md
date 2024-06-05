@@ -22,6 +22,9 @@
 | Linux  | :x: |
 |MacOS  | :x:  |
 
+# 실행 예시
+![personal_project_brick_breaking](https://github.com/yh-skku/oss_personal_project/assets/112400744/629f0f95-d687-4cfd-8eb9-68a051468b73)
+
 # 코드 설명
 ## main.py
 ### class Brick
