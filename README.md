@@ -3,7 +3,7 @@
 # 구현 목표
 본 프로젝트는 "스와이프 벽돌 깨기" 와 기존의 벽돌 부수기 게임에서 착안하여, 공으로 내려오는 벽돌들을 맞혀서 높은 점수를 얻는 것이 이 게임의 목표입니다. 벽돌을 부술 때마다 1점씩 점수를 얻게 되며, 공이 바를 맞지 않고 바닥으로 떨어지는 순간 게임은 종료됩니다. 매 게임마다 점수를 측정하며 가장 높은 점수는 최고기록으로 기록됩니다. 최선을 다해 고득점을 노려보세요.
 
-#구현 기능
+# 구현 기능
 * pygame 기반 게임 환경 구현
 * 좌,우 키보드를 통해 공을 받는 기능
 * 각 벽돌마다 난수 생성, 해당 난수만큼 벽돌을 맞혀야 벽돌이 부서지는 기능
@@ -11,7 +11,9 @@
   
 # reference
 [1] https://github.com/pygame/pygame "pygame"
-[2] https://github.com/attreyabhatt/Space-Invaders-Pygame 
+
+[2] https://github.com/attreyabhatt/Space-Invaders-Pygame
+
 [3] https://ai-creator.tistory.com/534
 
 # 지원 Operating Systems 및 실행 방법
@@ -19,8 +21,32 @@
 |OS| 지원 여부 |
 |-----|--------|
 |windows | :o:  |
-| Linux  | :x: |
+| Linux  | :o: |
 |MacOS  | :x:  |
+
+## 실행 방법
+### Windows
+  1. python 3.12를 설치한다
+  2. powershell 창에서 pygame library를 설치한다
+     '''
+     pip3 install pygame
+     '''
+  3. 재부팅 이후 python3 main.py를 입력하면 게임이 실행된다.
+     '''
+     python3 main.py
+     '''
+     
+### Linux
+  1. docker를 설치한다
+  2. Dockerfile을 빌드한다
+     '''
+     docker build -t brickbreaking:0.1 .
+     '''
+  3. docker container를 실행한다
+     '''
+     docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix brickbreaking:0.1
+     '''
+  4. 게임이 자동으로 실행된다.
 
 # 실행 예시
 ![personal_project_brick_breaking](https://github.com/yh-skku/oss_personal_project/assets/112400744/629f0f95-d687-4cfd-8eb9-68a051468b73)
@@ -38,7 +64,7 @@
 ### def print_score(), def print_max_score()
 - 화면에 현재 점수와 최고 점수를 출력하는 함수로, point, max_point 변수가 바뀔 때마다 바뀐 값을 출력하도록 동작
 
-###def reset_game()
+### def reset_game()
 - 게임을 초기화하는 함수. 벽돌을 전부 비우고 make_brick() 함수를 통해 새로운 벽돌을 생성, 바와 공을 초기상태로 설정한 후 현재 점수와 최고점수를 모두 0점으로 초기화한다.
 
 ### def move_bricks_down()
