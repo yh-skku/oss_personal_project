@@ -28,24 +28,24 @@
 ### Windows
   1. python 3.12를 설치한다
   2. powershell 창에서 pygame library를 설치한다
-     '''
+     ```
      pip3 install pygame
-     '''
+     ```
   3. 재부팅 이후 python3 main.py를 입력하면 게임이 실행된다.
-     '''
+     ```
      python3 main.py
-     '''
+     ```
      
 ### Linux
   1. docker를 설치한다
   2. Dockerfile을 빌드한다
-     '''
+     ```
      docker build -t brickbreaking:0.1 .
-     '''
+     ```
   3. docker container를 실행한다
-     '''
+     ```
      docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix brickbreaking:0.1
-     '''
+     ```
   4. 게임이 자동으로 실행된다.
 
 # 실행 예시
