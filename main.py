@@ -1,7 +1,17 @@
 import pygame
 import random
+import math
 
 pygame.init()
+
+##########################################
+#################PHASE 2##################
+# 목표 변경점
+# 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 발사
+# 2. 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 공 피해량 증가
+# 3. 블록 체력 점진적으로 증가 시스템 
+##########################################
+##########################################
 
 # 색상 및 폰트 설정
 BLACK = (0, 0, 0)
@@ -68,6 +78,7 @@ pygame.draw.rect(screen, BLUE,bar)
 # 공 생성
 ball_radius = 8
 ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, ball_radius * 2, ball_radius * 2)
+ball_speed = 5 # PHASE 2
 ball_dx = 5
 ball_dy = -5
 pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
@@ -95,10 +106,18 @@ first_game = True
 point = 0
 max_point = 0
 ball_hit_count = 0
+##########################################
+#################PHASE 2##################
+direction_selecting = True
+arrow_angle = 0
+arrow_speed = 0.05
+arrow_length = 50
+##########################################
+##########################################
 
 # 게임 초기화
 def reset_game():
-    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, direction_selecting, arrow_angle
     bricks.clear()
     make_brick()
     bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
@@ -107,6 +126,12 @@ def reset_game():
     ball_dy = -5
     point = 0
     ball_hit_count = 0 
+    ##########################################
+    #################PHASE 2##################
+    direction_selecting = True
+    arrow_angle = 0
+    ##########################################
+    ##########################################
 
 reset_game()
 
@@ -123,8 +148,18 @@ def move_bricks_down():
         block_value = random.randint(1, 5)
         brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
         bricks.append(brick)
-        
 
+##########################################
+#################PHASE 2##################
+# 방향 벡터 정규화 함수
+# 처음엔 그냥 쐈는데 x축으로 너무 치우쳐있을 경우 속도가 너무 빨라서 속도를 제한함
+def normalize_vector(dx, dy, speed):
+    length = math.sqrt(dx ** 2 + dy ** 2)
+    if length != 0:
+        return (dx / length) * speed, (dy / length) * speed
+    return dx, dy
+##########################################
+##########################################
 
 # 게임 시작
 while True:
@@ -133,14 +168,32 @@ while True:
             pygame.quit()
         elif event.type == pygame.KEYDOWN:
             if not game_started and event.key == pygame.K_SPACE:
-                reset_game()
-                game_started = True
-                first_game = False
+                ##########################################
+                #################PHASE 2##################
+                if direction_selecting:
+                    direction_selecting = False
+                    dx = arrow_length * math.cos(arrow_angle)
+                    dy = -arrow_length * math.sin(arrow_angle)
+                    ball_dx, ball_dy = normalize_vector(dx, dy, ball_speed)
+                    game_started = True
+                    first_game = False
+                else:
+                    reset_game()
+                    direction_selecting = True
+                ##########################################
+                ##########################################
             elif not game_started and event.key == pygame.K_q:
                 pygame.quit()
 
-            
-                
+    ##########################################
+    #################PHASE 2##################
+    if direction_selecting:  # 화살표가 반원을 그리며 움직이는 모드
+        arrow_angle += arrow_speed
+        if arrow_angle >= math.pi:
+            arrow_angle -= math.pi
+    ##########################################
+    ##########################################
+
     if game_started:  # 게임이 시작된 상태라면
         # 바 이동
         keys = pygame.key.get_pressed()
@@ -204,13 +257,23 @@ while True:
 
     # 바 그리기
     pygame.draw.rect(screen, BLUE, bar)
+
+    ##########################################
+    #################PHASE 2##################
+    # 방향 선택 모드일 때 화살표 그리기
+    if direction_selecting:
+        arrow_x = bar.centerx + arrow_length * math.cos(arrow_angle)
+        arrow_y = bar.top - arrow_length * math.sin(arrow_angle)
+        pygame.draw.line(screen, RED, bar.center, (arrow_x, arrow_y), 5)
+    ##########################################
+    #################PHASE 2##################
     
     # 점수 출력
     print_score()
     print_max_score()
     
     #게임 시작 또는 종료 문구 출력
-    if not game_started:
+    if not game_started and not direction_selecting:
         if first_game:
             screen.blit(start_text, start_text_rect)
             screen.blit(quit_text, quit_text_rect)
