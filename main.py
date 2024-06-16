@@ -8,8 +8,8 @@ pygame.init()
 #################PHASE 2##################
 # 목표 변경점
 # 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 해당 위치로 발사하는 기능 # math 라이브러리 cos, sin함수로 구현
-# 2. 초기 dx, dy가 고정되어 수정할수 없는 문제 고치기 위해 바에 운동량 추가하여 튕길 때 방향 변환 적용하는 기능
-# 3. 블록 체력 점진적으로 증가 시스템 + 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 공 피해량 증가
+# 2. 초기 dx, dy가 고정되어 수정할수 없는 문제 고치기 위해 바에 운동량 추가하여 튕길 때 방향 변환 적용하는 기능 + 공 속도 너무 빨라지는 것을 방지하는 시스템
+# 3. 블록 체력 점진적으로 증가 시스템 + 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 영구적 공 피해량 증가 또는 일시적 바 길이 증가 아이템
 ##########################################
 ##########################################
 
@@ -27,12 +27,13 @@ small_font = pygame.font.SysFont(None, 36)
 # 이미지 불러오기
 icon_image = pygame.image.load("icon.jpg")
 background_image = pygame.image.load("background.png")
-powerup_image = pygame.image.load("POW_Block.webp")
-
 ##########################################
 #################PHASE 2##################
+powerup_image = pygame.image.load("POW_Block.webp")
+lengthup_image = pygame.image.load("length_up.png")
 # 파워업 아이템 이미지 크기 조정
 powerup_image = pygame.transform.scale(powerup_image, (32, 32))
+lengthup_image = pygame.transform.scale(lengthup_image, (32, 32))
 ##########################################
 ##########################################
 
@@ -47,6 +48,8 @@ class Brick(pygame.Rect):
         value_text = small_font.render(str(self.block_value), True, BLACK)
         screen.blit(value_text, (self.x + self.width // 2 - value_text.get_width() // 2, self.y + self.height // 2 - value_text.get_height() // 2))
 
+##########################################
+#################PHASE 2##################
 # 아이템 클래스 생성
 class PowerUp(pygame.Rect):
     def __init__(self, x, y, width, height):
@@ -55,6 +58,14 @@ class PowerUp(pygame.Rect):
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
+class LengthUp(pygame.Rect):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.image = lengthup_image
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
+##########################################
+##########################################
 # 화면 설정
 screen_width = 1000
 screen_height = 700
@@ -150,6 +161,7 @@ ball_hit_count = 0
 ##########################################
 #################PHASE 2##################
 bar_speed = 10
+bar_extended = False
 bar_direction = 0  # -1: 왼쪽, 1: 오른쪽, 0: 정지
 direction_selecting = True
 arrow_angle = 0
@@ -160,7 +172,8 @@ arrow_length = 50
 
 # 게임 초기화
 def reset_game():
-    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, direction_selecting, arrow_angle
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, direction_selecting, arrow_angle, bar_speed
+    global bar_extended, bar_direction, arrow_speed, arrow_length, brick_coef
     bricks.clear()
     make_brick()
     bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
@@ -171,6 +184,8 @@ def reset_game():
     ball_hit_count = 0 
     ##########################################
     #################PHASE 2##################
+    brick_coef = 1
+    bar_extended = False
     direction_selecting = True
     arrow_angle = 0
     ##########################################
@@ -209,6 +224,15 @@ def normalize_vector(dx, dy): # 단순하게 최대 속도 고정으로 바꿈
     if dy <= -5:
         dy = -5
     return dx, dy
+
+# 바의 길이 증가 및 타이머 설정
+def extend_bar():
+    global bar, original_bar_width, bar_extended
+    if not bar_extended:
+        original_bar_width = bar.width
+        bar.width = original_bar_width * 1.5
+        bar_extended = True
+        pygame.time.set_timer(pygame.USEREVENT + 1, 10000)  # 10초 후 이벤트 발생
 ##########################################
 ##########################################
 
@@ -235,9 +259,11 @@ while True:
                 ##########################################
             elif not game_started and event.key == pygame.K_q:
                 pygame.quit()
-
-    ##########################################
-    #################PHASE 2##################
+        ##########################################
+        #################PHASE 2##################
+        elif event.type == pygame.USEREVENT + 1:  # 10초 타이머 이벤트
+            bar.width = original_bar_width
+            bar_extended = False
     if direction_selecting:  # 화살표가 반원을 그리며 움직이는 모드
         arrow_angle += arrow_speed
         if arrow_angle >= math.pi:
@@ -296,9 +322,12 @@ while True:
                     point+=1
                     ##########################################
                     #################PHASE 2##################
-                    if random.random() < 0.1: # 10% 확률로 아이템 생성
+                    if random.random() < 0.1: # 10% 확률로 파워업 아이템 생성
                         powerup = PowerUp(brick.x + brick.width // 2 - 16, brick.y, 32, 32)
                         powerups.append(powerup)
+                    if random.random() < 0.2: # 10% 확률로 길이 증가 아이템 생성
+                        lengthup = LengthUp(brick.x + brick.width // 2 - 16, brick.y, 32, 32)
+                        powerups.append(lengthup)
                     ##########################################
                     ##########################################
                 ball_dy = -ball_dy
@@ -321,6 +350,11 @@ while True:
             if powerup.colliderect(bar):
                 powerups.remove(powerup)
                 ball_damage += 1  # 공의 피해량 증가
+        for lengthup in powerups:
+            lengthup.y += 5
+            if lengthup.colliderect(bar):
+                powerups.remove(lengthup)
+                extend_bar()
         ##########################################
         ##########################################
 
