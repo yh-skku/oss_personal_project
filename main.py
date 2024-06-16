@@ -134,6 +134,14 @@ def print_max_score():
     max_score_text = small_font.render(f"high score: {max_point}", True, BLACK)
     screen.blit(max_score_text, (screen_width-180,5))
 
+##########################################
+#################PHASE 2##################
+def print_ball_power():
+    ball_power_text = small.font.render(f"Power: {ball_damage}", True, BLACK)
+    screen.blit(ball_power_text, (screen_width-180,695))
+##########################################
+#################PHASE 2##################
+
 game_started = False
 first_game = True
 point = 0
@@ -272,6 +280,12 @@ while True:
             game_started = False
             if max_point < point:
                 max_point = point
+
+        ##########################################
+        #################PHASE 2##################
+        ball_dx, ball_dy = normalize_vector(ball_dx,ball_dy) # 바로 튕기면서 +1씩 가속되는게 너무 빨라지던 문제 수정
+        ##########################################
+        ##########################################
 
         # 공이 벽돌에 닿았을 경우
         for brick in bricks:
