@@ -27,6 +27,7 @@ small_font = pygame.font.SysFont(None, 36)
 # 이미지 불러오기
 icon_image = pygame.image.load("icon.jpg")
 background_image = pygame.image.load("background.png")
+powerup_image = pygame.image.load("POW_Block.webp")
 
 # 벽돌 클래스 생성
 class Brick(pygame.Rect):
@@ -38,6 +39,14 @@ class Brick(pygame.Rect):
     def draw_value(self, screen):
         value_text = small_font.render(str(self.block_value), True, BLACK)
         screen.blit(value_text, (self.x + self.width // 2 - value_text.get_width() // 2, self.y + self.height // 2 - value_text.get_height() // 2))
+
+# 아이템 클래스 생성
+class PowerUp(pygame.Rect):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.image = powerup_image
+    def draw(self, screen):
+        screen.blit(self.image, (self.x, self.y))
 
 # 화면 설정
 screen_width = 1000
@@ -96,6 +105,9 @@ ball_damage = 1 # 공의 충격량 설정
 ##########################################
 ##########################################
 pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
+
+# 아이템 리스트 생성
+powerups = []
 
 # 게임 시작 및 종료 문구, 최고 점수 텍스트 생성 
 start_text = small_font.render("press spacekey to start game", True, BLACK)
@@ -161,7 +173,9 @@ def move_bricks_down():
     for column_index in range(COLUMN):
         brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
         brick_y = 35
-        block_value = random.randint(1, 5)
+        #################PHASE 2##################
+        block_value = random.randint(1*brick_coef, 5*brick_coef)
+        ##########################################
         brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
         bricks.append(brick)
 
@@ -253,6 +267,13 @@ while True:
                 if brick.block_value <= 0:
                     bricks.remove(brick)
                     point+=1
+                    ##########################################
+                    #################PHASE 2##################
+                    if random.random() < 0.1: # 10% 확률로 아이템 생성
+                        powerup = PowerUp(brick.x + brick.width // 2 - 16, brick.y, 32, 32)
+                        powerups.append(powerup)
+                    ##########################################
+                    ##########################################
                 ball_dy = -ball_dy
                 break
         ##########################################
@@ -267,7 +288,14 @@ while True:
                 ball_hit_count = 0
         ##########################################
         #################PHASE 2##################
-        
+        # 아이템 이동 및 바와 충돌 처리
+        for powerup in powerups:
+            powerup.y += 5  # 아이템 떨어지는 속도
+            if powerup.colliderect(bar):
+                powerups.remove(powerup)
+                ball_damage += 1  # 공의 피해량 증가
+        ##########################################
+        ##########################################
 
     # 화면 지우기
     screen.blit(background_image,(0,0))
