@@ -7,7 +7,7 @@ pygame.init()
 ##########################################
 #################PHASE 2##################
 # 목표 변경점
-# 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 해당 위치로 발사하는 기능
+# 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 해당 위치로 발사하는 기능 # math 라이브러리 cos, sin함수로 구현
 # 2. 초기 dx, dy가 고정되어 수정할수 없는 문제 고치기 위해 바에 운동량 추가하여 튕길 때 방향 변환 적용하는 기능
 # 3. 블록 체력 점진적으로 증가 시스템 + 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 공 피해량 증가
 ##########################################
@@ -59,6 +59,11 @@ ROW = 2
 brick_width = 70
 brick_height = 30
 brick_spacing = 20
+##########################################
+#################PHASE 2##################
+brick_coef = 1
+##########################################
+##########################################
 
 def make_brick():
     global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
@@ -66,7 +71,11 @@ def make_brick():
         for row_index in range(ROW):
             brick_x = screen_width / 2 - (COLUMN * (brick_width + brick_spacing) / 2) + column_index * (brick_width + brick_spacing)
             brick_y = row_index * (brick_height + brick_spacing) + 35
-            block_value = random.randint(1, 5)
+            ##########################################
+            #################PHASE 2##################
+            block_value = random.randint(1*brick_coef, 5*brick_coef) # 점차 강해지는 벽돌 생성
+            ##########################################
+            #################PHASE 2##################
             brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
             bricks.append(brick)
 
@@ -81,6 +90,11 @@ ball = pygame.Rect(screen_width // 2 - ball_radius, bar.top - ball_radius * 2, b
 ball_speed = 5 # PHASE 2
 ball_dx = 5
 ball_dy = -5
+##########################################
+#################PHASE 2##################
+ball_damage = 1 # 공의 충격량 설정
+##########################################
+##########################################
 pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
 
 # 게임 시작 및 종료 문구, 최고 점수 텍스트 생성 
@@ -132,7 +146,6 @@ def reset_game():
     #################PHASE 2##################
     direction_selecting = True
     arrow_angle = 0
-    bar_direction = 0
     ##########################################
     ##########################################
 
@@ -247,7 +260,7 @@ while True:
         # 공이 바에 닿았을 경우
         if ball.colliderect(bar):
             ball_dy = -ball_dy
-            ball_dx += bar_direction * 2  # 바의 이동 방향에 따라 공의 속도 조정 (최대 +- 2 정도로 조정됨)
+            ball_dx += bar_direction  # 바의 이동 방향에 따라 공의 속도 조정 (최대 +- 2 정도로 조정됨) -> 너무 커서 +- 1로 수정
             ball_hit_count += 1
             if ball_hit_count == 5:
                 move_bricks_down() 
