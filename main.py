@@ -137,8 +137,8 @@ def print_max_score():
 ##########################################
 #################PHASE 2##################
 def print_ball_power():
-    ball_power_text = small.font.render(f"Power: {ball_damage}", True, BLACK)
-    screen.blit(ball_power_text, (screen_width-180,695))
+    ball_power_text = small_font.render(f"Power: {ball_damage}", True, BLACK)
+    screen.blit(ball_power_text, (screen_width-180,600))
 ##########################################
 #################PHASE 2##################
 
@@ -356,6 +356,7 @@ while True:
     # 점수 출력
     print_score()
     print_max_score()
+    print_ball_power()
     
     #게임 시작 또는 종료 문구 출력
     if not game_started and not direction_selecting:
