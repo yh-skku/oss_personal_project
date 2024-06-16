@@ -183,10 +183,15 @@ def move_bricks_down():
 #################PHASE 2##################
 # 방향 벡터 정규화 함수
 # 처음엔 그냥 쐈는데 x축으로 너무 치우쳐있을 경우 속도가 너무 빨라서 속도를 제한함
-def normalize_vector(dx, dy, speed):
-    length = math.sqrt(dx ** 2 + dy ** 2)
-    if length != 0:
-        return (dx / length) * speed, (dy / length) * speed # 공의 속도를 일정하게 유지
+def normalize_vector(dx, dy): # 단순하게 최대 속도 고정으로 바꿈
+    if dx >= 5:
+        dx = 5
+    if dx <= -5:
+        dx = -5
+    if dy >= 5:
+        dy = 5
+    if dy <= -5:
+        dy = -5
     return dx, dy
 ##########################################
 ##########################################
@@ -204,7 +209,7 @@ while True:
                     direction_selecting = False
                     dx = arrow_length * math.cos(arrow_angle)
                     dy = -arrow_length * math.sin(arrow_angle)
-                    ball_dx, ball_dy = normalize_vector(dx, dy, ball_speed)
+                    ball_dx, ball_dy = normalize_vector(dx, dy)
                     game_started = True
                     first_game = False
                 else:
@@ -313,6 +318,11 @@ while True:
 
     ##########################################
     #################PHASE 2##################
+
+    # 아이템 그리기
+    for powerup in powerups:
+        powerup.draw(screen)
+
     # 방향 선택 모드일 때 화살표 그리기
     if direction_selecting:
         arrow_x = bar.centerx + arrow_length * math.cos(arrow_angle)
