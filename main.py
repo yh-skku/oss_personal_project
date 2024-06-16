@@ -29,6 +29,13 @@ icon_image = pygame.image.load("icon.jpg")
 background_image = pygame.image.load("background.png")
 powerup_image = pygame.image.load("POW_Block.webp")
 
+##########################################
+#################PHASE 2##################
+# 파워업 아이템 이미지 크기 조정
+powerup_image = pygame.transform.scale(powerup_image, (32, 32))
+##########################################
+##########################################
+
 # 벽돌 클래스 생성
 class Brick(pygame.Rect):
     #벽돌 생성 및 초기화
@@ -165,7 +172,8 @@ reset_game()
 
 # 새로운 벽돌을 생성하면서 벽돌을 한 칸 아래로 이동
 def move_bricks_down():
-    global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
+    global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing, brick_coef
+    brick_coef += 1
     for brick in bricks:
         brick.y += brick_height + brick_spacing
 
@@ -268,7 +276,7 @@ while True:
         # 공이 벽돌에 닿았을 경우
         for brick in bricks:
             if ball.colliderect(brick):
-                brick.block_value -= 1
+                brick.block_value -= ball_damage
                 if brick.block_value <= 0:
                     bricks.remove(brick)
                     point+=1
