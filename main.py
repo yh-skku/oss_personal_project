@@ -7,9 +7,9 @@ pygame.init()
 ##########################################
 #################PHASE 2##################
 # 목표 변경점
-# 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 발사
-# 2. 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 공 피해량 증가
-# 3. 블록 체력 점진적으로 증가 시스템 
+# 1. 초기 블록 발사 위치 마우스로 조정, space키로 눌러 해당 위치로 발사하는 기능
+# 2. 초기 dx, dy가 고정되어 수정할수 없는 문제 고치기 위해 바에 운동량 추가하여 튕길 때 방향 변환 적용하는 기능
+# 3. 블록 체력 점진적으로 증가 시스템 + 블록 처치 시 확률로 공 강화 아이템 떨어짐 -> 공 피해량 증가
 ##########################################
 ##########################################
 
@@ -108,6 +108,8 @@ max_point = 0
 ball_hit_count = 0
 ##########################################
 #################PHASE 2##################
+bar_speed = 10
+bar_direction = 0  # -1: 왼쪽, 1: 오른쪽, 0: 정지
 direction_selecting = True
 arrow_angle = 0
 arrow_speed = 0.05
@@ -130,6 +132,7 @@ def reset_game():
     #################PHASE 2##################
     direction_selecting = True
     arrow_angle = 0
+    bar_direction = 0
     ##########################################
     ##########################################
 
@@ -156,7 +159,7 @@ def move_bricks_down():
 def normalize_vector(dx, dy, speed):
     length = math.sqrt(dx ** 2 + dy ** 2)
     if length != 0:
-        return (dx / length) * speed, (dy / length) * speed
+        return (dx / length) * speed, (dy / length) * speed # 공의 속도를 일정하게 유지
     return dx, dy
 ##########################################
 ##########################################
@@ -197,10 +200,18 @@ while True:
     if game_started:  # 게임이 시작된 상태라면
         # 바 이동
         keys = pygame.key.get_pressed()
+        ##########################################
+        #################PHASE 2##################
         if keys[pygame.K_LEFT] and bar.left > 0:
-            bar.move_ip(-10, 0)
-        if keys[pygame.K_RIGHT] and bar.right < screen_width:
-            bar.move_ip(10, 0)
+            bar.move_ip(-bar_speed, 0)
+            bar_direction = -1
+        elif keys[pygame.K_RIGHT] and bar.right < screen_width:
+            bar.move_ip(bar_speed, 0)
+            bar_direction = 1
+        else:
+            bar_direction = 0
+        ##########################################
+        #################PHASE 2##################
 
         # 공 이동
         ball.x += ball_dx
@@ -231,18 +242,19 @@ while True:
                     point+=1
                 ball_dy = -ball_dy
                 break
-    
+        ##########################################
+        #################PHASE 2##################
         # 공이 바에 닿았을 경우
         if ball.colliderect(bar):
             ball_dy = -ball_dy
+            ball_dx += bar_direction * 2  # 바의 이동 방향에 따라 공의 속도 조정 (최대 +- 2 정도로 조정됨)
             ball_hit_count += 1
             if ball_hit_count == 5:
                 move_bricks_down() 
                 ball_hit_count = 0
+        ##########################################
+        #################PHASE 2##################
         
-        # 모든 벽돌을 제거했을 경우
-        if len(bricks) == 0:
-            game_started = False
 
     # 화면 지우기
     screen.blit(background_image,(0,0))
