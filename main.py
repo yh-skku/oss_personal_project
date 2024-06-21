@@ -13,6 +13,11 @@ db = firestore.client()
 
 pygame.init()
 
+# 배경음악
+# pygame.mixer.init()
+# pygame.mixer.music.load("music.ogg")
+# pygame.mixer.music.play(-1)
+
 # 색상 및 폰트 설정
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -21,20 +26,19 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 YELLOW = (200, 200, 0)
 GRAY = (128, 128, 128)
-############################################################################################
-########################################## PHASE2 ##########################################
+
 PURPLE = (165, 55, 253)
 ORANGE = (255, 148, 112)
 BACKGROUD_COLOR = (230,230,230)
-############################################################################################
-############################################################################################
 large_font = pygame.font.SysFont(None, 72)
 small_font = pygame.font.SysFont(None, 36)
-
+############################################################################################
+########################################## PHASE2 ##########################################
 # 이미지 불러오기
-icon_image = pygame.image.load("icon.jpg")
-background_image = pygame.image.load("background.png")
-
+icon_image = pygame.image.load("./assets/icon.jpg")
+background_image = pygame.image.load("./assets/backgroundImage.jpg")
+############################################################################################
+############################################################################################
 # 벽돌 클래스 생성
 class Brick(pygame.Rect):
     def __init__(self, x, y, width, height, block_value):
@@ -42,10 +46,8 @@ class Brick(pygame.Rect):
         self.block_value = block_value
 
     def draw_value(self, screen):
-        value_text = small_font.render(str(self.block_value), True, BLACK)
+        value_text = small_font.render(str(self.block_value), True, WHITE)
         screen.blit(value_text, (self.x + self.width // 2 - value_text.get_width() // 2, self.y + self.height // 2 - value_text.get_height() // 2))
-############################################################################################
-########################################## PHASE2 ##########################################
 # 아이템 클래스 생성
 class Item(pygame.Rect):
     def __init__(self, x, y, width, height, color):
@@ -55,8 +57,6 @@ class Item(pygame.Rect):
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self)
-############################################################################################
-############################################################################################
 
 # 화면 설정
 screen_width = 1000
@@ -72,8 +72,6 @@ clock = pygame.time.Clock()
 
 # 벽돌 생성
 bricks = []
-############################################################################################
-########################################## PHASE2 ##########################################
 double_items = []
 longer_items = []
 shorter_items = []
@@ -84,8 +82,6 @@ brick_width = 70
 brick_height = 30
 brick_spacing = 20
 item_probability = 95  # 아이템이 나올 확률
-############################################################################################
-############################################################################################
 
 def make_brick():
     global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
@@ -207,19 +203,26 @@ def draw_scoreboard(scores):
 ############################################################################################
 ########################################## PHASE2 ##########################################
 def draw_item_info():
-    info_surf = pygame.Surface((250, 100))  # 정보 표시할 표면 생성
-    info_surf.set_alpha(150)  # 투명도 설정
-    info_surf.fill(BACKGROUD_COLOR)
+    info_surf = pygame.Surface((250, 100), pygame.SRCALPHA)  # 투명한 표면 생성
+    info_surf.set_alpha(150)  # 표면 투명도 설정
+    info_surf.fill((255, 255, 255, 0))  # 완전히 투명한 배경색 설정 (RGBA)
+
     texts = [
-        ("RED: Power 2x", RED),
-        ("PURPLE: Size 2x", PURPLE),
-        ("ORANGE: Size 1/2x", ORANGE)
+        ("RED: Power x 2", RED),
+        ("PURPLE: Size x 2", PURPLE),
+        ("ORANGE: Size x 1/2", ORANGE)
     ]
+
     for i, (text, color) in enumerate(texts):
         text_surface = small_font.render(text, True, color)
-        info_surf.blit(text_surface, (10, i * 30))
-    screen.blit(info_surf, (10, screen_height - 100))
+        text_bg_surface = pygame.Surface(text_surface.get_size(), pygame.SRCALPHA)
+        text_bg_surface.fill((255, 255, 255, 0))  # 텍스트 배경을 완전히 투명하게 설정
+        text_bg_surface.blit(text_surface, (0, 0))
+        info_surf.blit(text_bg_surface, (10, i * 30))
 
+    screen.blit(info_surf, (10, screen_height - 100))
+############################################################################################
+############################################################################################
 game_over = False
 score_saved = False
 game_started = False
@@ -234,13 +237,9 @@ double_item_start_time = 0
 longer_item_start_time = 0
 shorter_item_start_time = 0
 power_multiplier = 1
-############################################################################################
-############################################################################################
 
 # 게임 초기화
 def reset_game():
-    ############################################################################################
-    ########################################## PHASE2 ##########################################
     global bricks, double_items, longer_items, shorter_items, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, max_point, game_over, score_saved, double_effect, longer_effect, shorter_effect, bar_color, power_multiplier
     bricks.clear()
     double_items.clear()
@@ -262,8 +261,6 @@ def reset_game():
     shorter_effect = False
     bar_color = BLUE  # 바 색상 초기화
     power_multiplier = 1  # 파워 초기화
-    ############################################################################################
-    ############################################################################################
 
 reset_game()
 
@@ -280,8 +277,6 @@ def move_bricks_down():
         block_value = random.randint(1, 5)
         brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
         bricks.append(brick)
-############################################################################################
-########################################## PHASE2 ##########################################
 def create_item(x, y, color):
     item_width = 20
     item_height = 20
@@ -345,8 +340,6 @@ while True:
                 point += 1
                 if brick.block_value <= 0:
                     bricks.remove(brick)
-    ############################################################################################
-    ########################################## PHASE2 ##########################################        
                     # 일정확률 아이템 생성
                     if random.random() < item_probability:
                         randomNum = random.randint(1, 4)
@@ -363,8 +356,6 @@ while True:
                         elif(randomNum == 3):
                             item = create_item(brick.x + brick.width // 2, brick.y + brick.height // 2, ORANGE)
                             shorter_items.append(item)
-    ############################################################################################          
-    ############################################################################################
                 ball_dy = -ball_dy
                 break
 
@@ -375,8 +366,6 @@ while True:
             if ball_hit_count == 5:
                 move_bricks_down()
                 ball_hit_count = 0
-############################################################################################
-########################################## PHASE2 ##########################################
         # 힘 2배 아이템에 닿았을 경우
         for item in double_items:
             if item.colliderect(bar):
@@ -432,8 +421,6 @@ while True:
         # 모든 효과가 끝나면 바 색상을 BLUE로 되돌림
         if not double_effect and not longer_effect and not shorter_effect:
             bar_color = BLUE
-############################################################################################
-############################################################################################
 
         # 모든 벽돌을 제거했을 경우
         if len(bricks) == 0:
@@ -445,13 +432,11 @@ while True:
 
     # 벽돌 그리기
     for brick in bricks:
-        pygame.draw.rect(screen, GREEN, brick)
+        pygame.draw.rect(screen, BLACK, brick)
         brick.draw_value(screen)
 
     # 공 그리기
     pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
-############################################################################################
-########################################## PHASE2 ##########################################
     # 바 그리기
     pygame.draw.rect(screen, bar_color, bar)
 
@@ -467,8 +452,6 @@ while True:
     print_max_score()
     # 아이템 정보 표시
     draw_item_info()
-############################################################################################
-############################################################################################
     # 게임 시작 또는 종료 문구 출력
     if not game_started:
         if first_game:
