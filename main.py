@@ -26,19 +26,17 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 YELLOW = (200, 200, 0)
 GRAY = (128, 128, 128)
-
 PURPLE = (165, 55, 253)
 ORANGE = (255, 148, 112)
 BACKGROUD_COLOR = (230,230,230)
+
 large_font = pygame.font.SysFont(None, 72)
 small_font = pygame.font.SysFont(None, 36)
-############################################################################################
-########################################## PHASE2 ##########################################
+
 # 이미지 불러오기
 icon_image = pygame.image.load("./assets/icon.jpg")
 background_image = pygame.image.load("./assets/backgroundImage.jpg")
-############################################################################################
-############################################################################################
+
 # 벽돌 클래스 생성
 class Brick(pygame.Rect):
     def __init__(self, x, y, width, height, block_value):
@@ -48,6 +46,7 @@ class Brick(pygame.Rect):
     def draw_value(self, screen):
         value_text = small_font.render(str(self.block_value), True, WHITE)
         screen.blit(value_text, (self.x + self.width // 2 - value_text.get_width() // 2, self.y + self.height // 2 - value_text.get_height() // 2))
+
 # 아이템 클래스 생성
 class Item(pygame.Rect):
     def __init__(self, x, y, width, height, color):
@@ -81,7 +80,7 @@ ROW = 2
 brick_width = 70
 brick_height = 30
 brick_spacing = 20
-item_probability = 95  # 아이템이 나올 확률
+item_probability = 0.95  # 아이템이 나올 확률
 
 def make_brick():
     global bricks, COLUMN, ROW, brick_width, brick_height, brick_spacing
@@ -200,8 +199,7 @@ def draw_scoreboard(scores):
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return
-############################################################################################
-########################################## PHASE2 ##########################################
+
 def draw_item_info():
     info_surf = pygame.Surface((250, 100), pygame.SRCALPHA)  # 투명한 표면 생성
     info_surf.set_alpha(150)  # 표면 투명도 설정
@@ -221,8 +219,7 @@ def draw_item_info():
         info_surf.blit(text_bg_surface, (10, i * 30))
 
     screen.blit(info_surf, (10, screen_height - 100))
-############################################################################################
-############################################################################################
+
 game_over = False
 score_saved = False
 game_started = False
@@ -238,9 +235,12 @@ longer_item_start_time = 0
 shorter_item_start_time = 0
 power_multiplier = 1
 
+# 타이머 설정
+start_ticks = pygame.time.get_ticks()  # 게임 시작 시간
+
 # 게임 초기화
 def reset_game():
-    global bricks, double_items, longer_items, shorter_items, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, max_point, game_over, score_saved, double_effect, longer_effect, shorter_effect, bar_color, power_multiplier
+    global bricks, double_items, longer_items, shorter_items, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count, max_point, game_over, score_saved, double_effect, longer_effect, shorter_effect, bar_color, power_multiplier, start_ticks
     bricks.clear()
     double_items.clear()
     longer_items.clear()
@@ -261,6 +261,7 @@ def reset_game():
     shorter_effect = False
     bar_color = BLUE  # 바 색상 초기화
     power_multiplier = 1  # 파워 초기화
+    start_ticks = pygame.time.get_ticks()  # 타이머 초기화
 
 reset_game()
 
@@ -277,6 +278,7 @@ def move_bricks_down():
         block_value = random.randint(1, 5)
         brick = Brick(brick_x, brick_y, brick_width, brick_height, block_value)
         bricks.append(brick)
+
 def create_item(x, y, color):
     item_width = 20
     item_height = 20
@@ -343,17 +345,13 @@ while True:
                     # 일정확률 아이템 생성
                     if random.random() < item_probability:
                         randomNum = random.randint(1, 4)
-                        
-                        # 힘 2배
-                        if(randomNum == 1):
+                        if randomNum == 1:
                             item = create_item(brick.x + brick.width // 2, brick.y + brick.height // 2, RED)
                             double_items.append(item)    
-                        # 길이 2배
-                        elif(randomNum == 2):
+                        elif randomNum == 2:
                             item = create_item(brick.x + brick.width // 2, brick.y + brick.height // 2, PURPLE)
                             longer_items.append(item)
-                        # 길이 1/2배
-                        elif(randomNum == 3):
+                        elif randomNum == 3:
                             item = create_item(brick.x + brick.width // 2, brick.y + brick.height // 2, ORANGE)
                             shorter_items.append(item)
                 ball_dy = -ball_dy
@@ -366,6 +364,7 @@ while True:
             if ball_hit_count == 5:
                 move_bricks_down()
                 ball_hit_count = 0
+        
         # 힘 2배 아이템에 닿았을 경우
         for item in double_items:
             if item.colliderect(bar):
@@ -437,6 +436,7 @@ while True:
 
     # 공 그리기
     pygame.draw.circle(screen, YELLOW, ball.center, ball_radius)
+    
     # 바 그리기
     pygame.draw.rect(screen, bar_color, bar)
 
@@ -452,6 +452,12 @@ while True:
     print_max_score()
     # 아이템 정보 표시
     draw_item_info()
+
+    # 타이머 표시
+    elapsed_seconds = (pygame.time.get_ticks() - start_ticks) // 1000
+    timer_text = small_font.render(f"{elapsed_seconds // 60:02}:{elapsed_seconds % 60:02}", True, BLACK)
+    screen.blit(timer_text, (screen_width - 100, screen_height - 50))
+
     # 게임 시작 또는 종료 문구 출력
     if not game_started:
         if first_game:
@@ -467,6 +473,11 @@ while True:
 
     # 화면 업데이트
     pygame.display.flip()
+
+    # 공 속도 증가
+    if elapsed_seconds % 20 == 0 and elapsed_seconds != 0:
+        ball_dx *= 1.25
+        ball_dy *= 1.25
 
     # 게임 속도 조절
     clock.tick(40)
