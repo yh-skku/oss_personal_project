@@ -1,5 +1,17 @@
 import pygame
 import random
+############################################################################################
+########################################## PHASE2 ##########################################
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+cred = credentials.Certificate("./firebase.json")
+firebase_admin.initialize_app(cred)
+
+# Firestore 데이터베이스를 가져옵니다.
+db = firestore.client()
+############################################################################################
 
 pygame.init()
 
@@ -80,15 +92,102 @@ end_text_rect = end_text.get_rect(center=(screen_width // 2, screen_height // 2)
 quit_text = small_font.render("press q to quit game", True, BLACK)
 quit_text_rect = quit_text.get_rect(center=(screen_width // 2, screen_height // 2 + 100))
 
-# 점수 설정
+############################################################################################
+########################################## PHASE2 ##########################################
+############################################################################################
+save_score_text = small_font.render("Save score? (Y/N)", True, BLACK)
+save_score_text_rect = save_score_text.get_rect(center=(screen_width // 2, screen_height // 2 - 50))
+scoreboard_text = small_font.render("ScoreBoard: (L)", True, BLACK)
+scoreboard_text_rect = scoreboard_text.get_rect(bottomright=(screen_width, screen_height))
 
-def print_score():
+# Firebase 컬렉션 
+collection_name = 'scores'
+
+# 점수 설정
+def print_score(point):
     score_text = small_font.render(f"Score: {point}", True, BLACK)
     screen.blit(score_text, (5, 5))
 
 def print_max_score():
     max_score_text = small_font.render(f"high score: {max_point}", True, BLACK)
-    screen.blit(max_score_text, (screen_width-180,5))
+    screen.blit(max_score_text, (screen_width - 180, 5))
+# 점수 추가하기
+def add_score(name, point):
+    data = {
+        'name': name,
+        'score': point
+    }
+    ref = db.collection(collection_name).document()
+    ref.set(data)
+# 전체 점수들 가져오기
+def get_scores():
+    scores_ref = db.collection(collection_name)
+    scores = scores_ref.get()
+    score_list = []
+    for score in scores:
+        score_list.append(score.to_dict())
+    return sorted(score_list, key=lambda x: x['score'], reverse=True)
+# 최고 점수
+def get_high_score():
+    scores = get_scores()
+    if scores:
+        high_score = max(score['score'] for score in scores)
+        return high_score
+    return 0
+
+def draw_text_input_box(text):
+    input_box = pygame.Rect(screen_width // 2 - 100, screen_height // 2, 200, 40)
+    pygame.draw.rect(screen, WHITE, input_box)
+    pygame.draw.rect(screen, BLACK, input_box, 2)
+    text_surface = small_font.render(text, True, BLACK)
+    screen.blit(text_surface, (input_box.x + 5, input_box.y + 5))
+    pygame.display.flip()
+
+def get_text_input():
+    put_name_text = small_font.render("Input Username", True, BLACK)
+    text = ''
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return text
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
+        screen.blit(background_image, (0, 0))
+        screen.blit(put_name_text, save_score_text_rect)
+        draw_text_input_box(text)
+        pygame.display.flip()
+        
+def draw_scoreboard(scores):
+    screen.blit(background_image, (0, 0))
+    y_offset = 100
+    screen.blit(large_font.render("Score Board", True, BLACK), (screen_width // 2 - 100, 50))
+    screen.blit(small_font.render("ESC", True, BLACK), (50, 50))
+    for score in scores[:15]: 
+        text = f"{score['name']}: {score['score']}"
+        score_text = small_font.render(text, True, BLACK)
+        screen.blit(score_text, (screen_width // 2 - 100, y_offset))
+        y_offset += 40
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return
+
+
+game_over = False
+score_saved = False
+
+############################################################################################
+############################################################################################
+############################################################################################
 
 game_started = False
 first_game = True
@@ -98,7 +197,7 @@ ball_hit_count = 0
 
 # 게임 초기화
 def reset_game():
-    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count
+    global bricks, bar, ball, ball_dx, ball_dy, game_started, life, point, ball_hit_count,  max_point, game_over, score_saved
     bricks.clear()
     make_brick()
     bar = pygame.Rect(screen_width // 2 - 80 // 2, screen_height - 16 - 30, 80, 16)
@@ -107,6 +206,9 @@ def reset_game():
     ball_dy = -5
     point = 0
     ball_hit_count = 0 
+    game_over = False
+    score_saved = False
+    max_point = get_high_score()  # 최고 점수 조회
 
 reset_game()
 
@@ -125,20 +227,33 @@ def move_bricks_down():
         bricks.append(brick)
         
 
-
+############################################################################################
+########################################## PHASE2 ##########################################
+############################################################################################
 # 게임 시작
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
         elif event.type == pygame.KEYDOWN:
-            if not game_started and event.key == pygame.K_SPACE:
+            if event.key == pygame.K_l:
+                draw_scoreboard(get_scores())
+            elif not game_started and event.key == pygame.K_SPACE:
                 reset_game()
                 game_started = True
                 first_game = False
             elif not game_started and event.key == pygame.K_q:
                 pygame.quit()
-
+            elif game_over and not score_saved:
+                if event.key == pygame.K_y:
+                    name = get_text_input()
+                    add_score(name, point)
+                    score_saved = True
+                elif event.key == pygame.K_n:
+                    score_saved = True
+############################################################################################
+############################################################################################
+############################################################################################
             
                 
     if game_started:  # 게임이 시작된 상태라면
@@ -166,6 +281,7 @@ while True:
             ball_dy = -ball_dy
         elif ball.top >= screen_height: # 공이 바닥에 닿았을 경우
             game_started = False
+            game_over = True
             if max_point < point:
                 max_point = point
 
@@ -173,9 +289,9 @@ while True:
         for brick in bricks:
             if ball.colliderect(brick):
                 brick.block_value -= 1
+                point+=1
                 if brick.block_value <= 0:
                     bricks.remove(brick)
-                    point+=1
                 ball_dy = -ball_dy
                 break
     
@@ -190,6 +306,7 @@ while True:
         # 모든 벽돌을 제거했을 경우
         if len(bricks) == 0:
             game_started = False
+            game_over = True
 
     # 화면 지우기
     screen.blit(background_image,(0,0))
@@ -205,18 +322,27 @@ while True:
     # 바 그리기
     pygame.draw.rect(screen, BLUE, bar)
     
-    # 점수 출력
-    print_score()
+  
+    ####################################################################################################
+    ########################################## PHASE2 ##################################################
+    ####################################################################################################
+    print_score(point)
     print_max_score()
-    
-    #게임 시작 또는 종료 문구 출력
+     # 게임 시작 또는 종료 문구 출력
     if not game_started:
         if first_game:
             screen.blit(start_text, start_text_rect)
             screen.blit(quit_text, quit_text_rect)
+            screen.blit(scoreboard_text, scoreboard_text_rect)
         else:
             screen.blit(end_text, end_text_rect)
             screen.blit(quit_text, quit_text_rect)
+            screen.blit(scoreboard_text, scoreboard_text_rect)
+        if game_over and not score_saved:
+            screen.blit(save_score_text, save_score_text_rect)
+    ####################################################################################################
+    ####################################################################################################
+    ####################################################################################################
 
     # 화면 업데이트
     pygame.display.flip()
